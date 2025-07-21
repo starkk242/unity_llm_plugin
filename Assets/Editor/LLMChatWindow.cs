@@ -102,9 +102,26 @@ public class LLMChatWindow : EditorWindow
         });
         while (!done) yield return null;
         if (!string.IsNullOrEmpty(error))
+        {
             chatHistory.Add($"LLM: {error}");
+        }
         else
+        {
             chatHistory.Add($"LLM: {llmReply}");
+            // Try to detect and execute LLM commands in JSON format
+            if (llmReply != null && llmReply.TrimStart().StartsWith("{") && llmReply.Contains("\"commands\""))
+            {
+                try
+                {
+                    LLMCommandExecutor.ExecuteCommands(llmReply);
+                    chatHistory.Add("[LLMCommandExecutor] Executed commands from response.");
+                }
+                catch (System.Exception ex)
+                {
+                    chatHistory.Add($"[LLMCommandExecutor] Error: {ex.Message}");
+                }
+            }
+        }
         isAwaitingResponse = false;
         scrollPos.y = float.MaxValue;
         Repaint();

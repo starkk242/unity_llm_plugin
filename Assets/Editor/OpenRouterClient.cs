@@ -37,12 +37,19 @@ public class OpenRouterClient
 
     public IEnumerator SendPromptCoroutine(string apiKey, string prompt, Action<LLMResult> callback)
     {
+        string systemInstruction =
+            "You are a Unity Editor assistant. Always respond ONLY with a JSON object containing a 'commands' array. " +
+            "Each command is an object with a 'command' field (e.g., 'CreateObject', 'AddComponent', 'UpdateComponent'), and relevant parameters. " +
+            "Do not include any explanation or text outside the JSON.\n" +
+            "Example: If the user says 'create a red ball with physics', respond with:\n" +
+            "{\n  \"commands\": [\n    { \"command\": \"CreateObject\", \"name\": \"RedBall\" },\n    { \"command\": \"AddComponent\", \"target\": \"RedBall\", \"component\": \"Rigidbody\" },\n    { \"command\": \"AddComponent\", \"target\": \"RedBall\", \"component\": \"SphereCollider\" },\n    { \"command\": \"UpdateComponent\", \"target\": \"RedBall\", \"component\": \"Renderer\", \"property\": \"material.color\", \"value\": \"red\" }\n  ]\n}";
+
         var requestBody = new OpenRouterRequest()
         {
             model = "openai/gpt-3.5-turbo",
             messages = new List<Message>()
             {
-                new Message { role = "system", content = "You are a helpful Unity Editor assistant." },
+                new Message { role = "system", content = systemInstruction },
                 new Message { role = "user", content = prompt }
             }
         };
