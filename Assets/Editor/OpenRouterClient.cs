@@ -58,7 +58,7 @@ public class OpenRouterClient
 
         var requestBody = new OpenRouterRequest()
         {
-            model = "openai/gpt-3.5-turbo",
+            model = "deepseek/deepseek-chat-v3-0324:free",
             messages = messages
         };
         string json = JsonUtility.ToJson(requestBody, true);
