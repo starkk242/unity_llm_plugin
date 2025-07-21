@@ -35,23 +35,31 @@ public class OpenRouterClient
         public Message message;
     }
 
-    public IEnumerator SendPromptCoroutine(string apiKey, string prompt, Action<LLMResult> callback)
+
+    public IEnumerator SendPromptCoroutine(string apiKey, string prompt, Action<LLMResult> callback, string sceneContextJson = null)
     {
         string systemInstruction =
             "You are a Unity Editor assistant. Always respond ONLY with a JSON object containing a 'commands' array. " +
             "Each command is an object with a 'command' field (e.g., 'CreateObject', 'AddComponent', 'UpdateComponent'), and relevant parameters. " +
             "Do not include any explanation or text outside the JSON.\n" +
+            "You will also receive the current Unity scene context as JSON. Use it to reason about what objects exist.\n" +
             "Example: If the user says 'create a red ball with physics', respond with:\n" +
             "{\n  \"commands\": [\n    { \"command\": \"CreateObject\", \"name\": \"RedBall\" },\n    { \"command\": \"AddComponent\", \"target\": \"RedBall\", \"component\": \"Rigidbody\" },\n    { \"command\": \"AddComponent\", \"target\": \"RedBall\", \"component\": \"SphereCollider\" },\n    { \"command\": \"UpdateComponent\", \"target\": \"RedBall\", \"component\": \"Renderer\", \"property\": \"material.color\", \"value\": \"red\" }\n  ]\n}";
+
+        var messages = new List<Message>()
+        {
+            new Message { role = "system", content = systemInstruction }
+        };
+        if (!string.IsNullOrEmpty(sceneContextJson))
+        {
+            messages.Add(new Message { role = "user", content = "[SCENE CONTEXT]" + System.Environment.NewLine + sceneContextJson });
+        }
+        messages.Add(new Message { role = "user", content = prompt });
 
         var requestBody = new OpenRouterRequest()
         {
             model = "openai/gpt-3.5-turbo",
-            messages = new List<Message>()
-            {
-                new Message { role = "system", content = systemInstruction },
-                new Message { role = "user", content = prompt }
-            }
+            messages = messages
         };
         string json = JsonUtility.ToJson(requestBody, true);
 

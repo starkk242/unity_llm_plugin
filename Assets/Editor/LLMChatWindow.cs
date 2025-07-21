@@ -73,9 +73,11 @@ public class LLMChatWindow : EditorWindow
             scrollPos.y = float.MaxValue;
             isAwaitingResponse = true;
             Repaint();
+            // Gather scene context
+            string sceneContextJson = SceneContextProvider.GetCurrentSceneContextJson();
             // Start coroutine for async API call
             EditorApplication.update += EditorCoroutine;
-            coroutine = SendPromptCoroutine(promptToSend);
+            coroutine = SendPromptCoroutine(promptToSend, sceneContextJson);
         }
     }
 
@@ -88,7 +90,7 @@ public class LLMChatWindow : EditorWindow
         }
     }
 
-    private IEnumerator<System.Object> SendPromptCoroutine(string prompt)
+    private IEnumerator<System.Object> SendPromptCoroutine(string prompt, string sceneContextJson)
     {
         bool done = false;
         string llmReply = null;
@@ -99,7 +101,7 @@ public class LLMChatWindow : EditorWindow
             else
                 llmReply = result.response;
             done = true;
-        });
+        }, sceneContextJson);
         while (!done) yield return null;
         if (!string.IsNullOrEmpty(error))
         {
